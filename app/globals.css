@@ -128,3 +128,8 @@
     @apply font-sans;
   }
 }
+
+.leaflet-container.bathroom-add-mode,
+.leaflet-container.bathroom-add-mode .leaflet-interactive {
+  cursor: crosshair;
+}
