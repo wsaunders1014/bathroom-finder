@@ -2,12 +2,10 @@ import Image from "next/image";
 
 type CenterLocationButtonProps = {
   onClick: () => void;
-  disabled?: boolean;
 };
 
 export default function CenterLocationButton({
   onClick,
-  disabled = false,
 }: CenterLocationButtonProps) {
   return (
     <button
@@ -15,7 +13,7 @@ export default function CenterLocationButton({
       type="button"
       aria-label="Center on my location"
       onClick={onClick}
-      disabled={disabled}
+      
     >
       <Image
         src="/icons/center-location.svg"

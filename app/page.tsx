@@ -1,24 +1,35 @@
 import { Suspense } from "react";
 import BathroomMapLoader from "@/components/BathroomMapLoader";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toBathroom } from "@/lib/bathrooms";
+import { connection } from "next/server";
 async function BathroomMapWithData() {
-  const supabase = createSupabaseServerClient();
+  await connection();
+  const authClient = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
+  const { data: authData } = await authClient.auth.getClaims()
 
-  const { data, error } = await supabase
+  const isSignedIn = Boolean(authData?.claims);
+  console.log("isSignedIn:", isSignedIn);
+  const { data, error } = await admin
     .from("bathrooms")
-    .select(
-    "id, name, address, latitude, longitude, venue_category, access_policy, entry_method, access_notes, updated_at",
-  );
-
+    .select(`
+  *,
+  bathroom_access_codes (
+    id,
+    code,
+    created_at
+  )
+`);
+  
   if (error) {
     console.error("Supabase read failed:", error.message);
     throw new Error("Could not load bathrooms");
   }
   const bathrooms = data.map(toBathroom);
-  console.log("Supabase connection successful:", data);
 
-  return <BathroomMapLoader bathrooms={bathrooms} />;
+  return <BathroomMapLoader bathrooms={bathrooms} isSignedIn={isSignedIn} />;
 }
 export default async function Home() {
  

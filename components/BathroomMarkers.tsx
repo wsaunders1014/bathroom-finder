@@ -26,7 +26,14 @@ export default function BathroomMarkers({
              <Popup>
                 <strong>{bathroom.name}</strong>
                 <br />
-                {bathroom.address}
+                {bathroom.address || "Address not provided"}
+                <br />
+                Access: {bathroom.accessPolicy}
+                <br />
+                Entry: {bathroom.entryMethod}
+                {bathroom.codes.map((code) => (
+                    <div key={code.id}>Code: {code.code} — Unverified</div>
+                ))}
             </Popup>
           </CircleMarker>
         ))}

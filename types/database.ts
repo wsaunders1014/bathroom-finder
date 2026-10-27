@@ -19,18 +19,21 @@ export type Database = {
           bathroom_id: string
           code: string
           created_at: string
+          created_by: string | null
           id: string
         }
         Insert: {
           bathroom_id: string
           code: string
           created_at?: string
+          created_by?: string | null
           id?: string
         }
         Update: {
           bathroom_id?: string
           code?: string
           created_at?: string
+          created_by?: string | null
           id?: string
         }
         Relationships: [
@@ -47,8 +50,9 @@ export type Database = {
         Row: {
           access_notes: string | null
           access_policy: string
-          address: string
+          address: string | null
           created_at: string
+          created_by: string | null
           entry_method: string
           id: string
           latitude: number
@@ -60,8 +64,9 @@ export type Database = {
         Insert: {
           access_notes?: string | null
           access_policy?: string
-          address: string
+          address?: string | null
           created_at?: string
+          created_by?: string | null
           entry_method?: string
           id?: string
           latitude: number
@@ -73,8 +78,9 @@ export type Database = {
         Update: {
           access_notes?: string | null
           access_policy?: string
-          address?: string
+          address?: string | null
           created_at?: string
+          created_by?: string | null
           entry_method?: string
           id?: string
           latitude?: number
@@ -104,8 +110,9 @@ export type Database = {
         Returns: {
           access_notes: string | null
           access_policy: string
-          address: string
+          address: string | null
           created_at: string
+          created_by: string | null
           entry_method: string
           id: string
           latitude: number
@@ -120,6 +127,19 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      create_bathroom_with_code_v2: {
+        Args: {
+          p_access_notes?: string
+          p_access_policy?: string
+          p_address: string
+          p_code?: string
+          p_entry_method?: string
+          p_latitude: number
+          p_longitude: number
+          p_name: string
+        }
+        Returns: Json
       }
     }
     Enums: {

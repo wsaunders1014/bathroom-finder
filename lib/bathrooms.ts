@@ -2,12 +2,18 @@ import type { Bathroom } from "@/types/bathroom";
 import type { Database } from "@/types/database";
 
 type BathroomRow = Database["public"]["Tables"]["bathrooms"]["Row"];
-
-export function toBathroom(row: BathroomRow): Bathroom {
+type AccessCodeRow = Database["public"]["Tables"]["bathroom_access_codes"]["Row"];
+export type BathroomWithCodesRow = BathroomRow & {
+  bathroom_access_codes?: Pick<
+    AccessCodeRow,
+    "id" | "code" | "created_at"
+  >[];
+};
+export function toBathroom(row: BathroomWithCodesRow): Bathroom {
   return {
     id: row.id,
     name: row.name,
-    address: row.address,
+    address: row.address ?? undefined,
     location: {
       latitude: row.latitude,
       longitude: row.longitude,
@@ -17,6 +23,11 @@ export function toBathroom(row: BathroomRow): Bathroom {
     entryMethod: parseEntryMethod(row.entry_method),
     accessNotes: row.access_notes ?? undefined,
     updatedAt: row.updated_at,
+    codes: (row.bathroom_access_codes ?? []).map((code) => ({
+      id: code.id,
+      code: code.code,
+      createdAt: code.created_at,
+    })),
   };
 }
 function parseVenueCategory(value: string): Bathroom["venueCategory"] {

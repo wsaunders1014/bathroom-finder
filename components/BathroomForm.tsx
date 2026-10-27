@@ -70,13 +70,13 @@ export default function BathroomForm({
           />
         </div>
         <div className="grid gap-2">
-            <Label htmlFor="bathroom-address">Address</Label>
+            <Label htmlFor="bathroom-address">Address(optional)</Label>
             <Input
                 id="bathroom-address"
                 name="address"
-                required
+                
                 maxLength={500}
-                placeholder="Street address"
+                placeholder="Street address if known"
             />
         </div>
         <div className="grid gap-2">
