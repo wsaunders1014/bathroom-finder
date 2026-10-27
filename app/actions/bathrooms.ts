@@ -1,5 +1,5 @@
 "use server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { Bathroom } from "@/types/bathroom";
 import { toBathroom, type BathroomWithCodesRow } from "@/lib/bathrooms";
 
@@ -25,7 +25,11 @@ export async function saveBathroom(
       message: "Submissions are not enabled yet.",
     };
   }
-
+  const supabase = await createSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getClaims();
+  if (!authData?.claims) {
+    return { status: "error", message: "Please sign in to add a bathroom." };
+  }
   const nameValue = formData.get("name");
   const addressValue = formData.get("address");
   const latitudeValue = formData.get("latitude");
@@ -99,7 +103,7 @@ export async function saveBathroom(
   }
 
   try {
-    const supabase = createSupabaseAdminClient();
+    
 
     const { data, error } = await supabase.rpc(
     "create_bathroom_with_code_v2",
@@ -113,20 +117,13 @@ export async function saveBathroom(
       p_access_notes: accessNotes ?? undefined,
       p_code: code ?? undefined,
     })
-    // .select(`
-    //   *,
-    //   bathroom_access_codes (
-    //     id,
-    //     code,
-    //     created_at
-    //   )`)
-    //   .single();
+ 
 
     if (error) {
       console.error("Bathroom insert failed:", error.message);
       return { status: "error", message: "Could not save. Please try again." };
     }
-    console.dir(data, { depth: null });
+  
     return { status: "success", message: "Bathroom saved.", bathroom: toBathroom(data as BathroomWithCodesRow) };
   } catch {
     return { status: "error", message: "Could not save. Please try again." };

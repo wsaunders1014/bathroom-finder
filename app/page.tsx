@@ -11,7 +11,7 @@ async function BathroomMapWithData() {
   const { data: authData } = await authClient.auth.getClaims()
 
   const isSignedIn = Boolean(authData?.claims);
-  console.log("isSignedIn:", isSignedIn);
+
   const { data, error } = await admin
     .from("bathrooms")
     .select(`
