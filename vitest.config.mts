@@ -8,5 +8,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // e2e/ holds Playwright tests, which Vitest can't run.
+    exclude: ['**/node_modules/**', 'e2e/**'],
   },
 })

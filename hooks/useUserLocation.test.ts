@@ -48,7 +48,7 @@ test('stores the position and set status to located on success', () => {
     expect(result.current.status).toBe("located")
     expect(result.current.position).toEqual([34, -118]);
 })
-test('stop watching when mounted', ()=>{
+test('stop watching when unmounted', ()=>{
     const watchPosition = vi.fn(()=> 42);
     const clearWatch = vi.fn();
      Object.defineProperty(navigator, "geolocation", {
@@ -59,4 +59,19 @@ test('stop watching when mounted', ()=>{
     unmount();
     expect(clearWatch).toHaveBeenCalledWith(42)
 
+})
+test('retry resets status and starts a new watch', ()=>{
+    const watchPosition = vi.fn();
+    Object.defineProperty(navigator, "geolocation", {
+        value: { watchPosition, clearWatch: vi.fn() },
+        configurable: true,
+    })
+    const { result } = renderHook(() => useUserLocation());
+
+    const onError = watchPosition.mock.calls[0][1];
+    act(() => {
+        onError({code:1, PERMISSION_DENIED:2})
+        result.current.retry();
+    });
+    expect(result.current.status).toBe("locating")
 })

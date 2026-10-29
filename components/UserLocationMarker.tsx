@@ -1,13 +1,13 @@
 
 import { CircleMarker, useMapEvents } from "react-leaflet";
-type LocateUserProps = {
+type UserLocationProps = {
     position: [number, number] | null;
     onUserPan: ()=> void;
 }
-export default function LocateUser({
+export default function UserLocation({
   position,
   onUserPan
-}: LocateUserProps) {
+}: UserLocationProps) {
   useMapEvents({
     dragstart: () => onUserPan(),
   })
