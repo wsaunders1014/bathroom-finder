@@ -1,0 +1,48 @@
+/* Leaflet's div. Leaflet moves it, so don't scale or style it. */
+.markerWrapper {
+    /* empty is fine; it's needed so Leaflet doesn't add its default white box */
+}
+/* The circle */
+.marker {
+     width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background-color: var(--policy-color);
+    color: white;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    scale: var(--marker-scale, 1);
+    transition: background-color 150ms, color 150ms, scale 200ms;
+    /* The fill color mixed with 10% black, so each policy gets a matching darker ring. */
+    border: 2px solid color-mix(in oklch, var(--policy-color), black 10%);
+}
+
+/* Each access policy sets the color used by the fill, the ring, and the hover icon. */
+.public             { --policy-color: var(--public-fill-color); }
+.customersOnly      { --policy-color: var(--customers-only-fill); }
+.permissionRequired { --policy-color: var(--permission-fill); }
+.policyUnknown      { --policy-color: var(--unknown-fill); }
+
+/* :hover and isActive now go on the wrapper, which is where Leaflet's events happen */
+.markerWrapper:hover .marker,
+.markerWrapper.isActive .marker {
+    background-color: white;
+    color: var(--policy-color);
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    mask-image: var(--icon-url);
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}
+
+.unknown {
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1;
+}

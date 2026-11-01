@@ -15,11 +15,11 @@ export type Bathroom = {
     codes: BathroomAccessCode[];
 };
 
-type AccessPolicy = "public" | "customers_only" | "permission_required" | "unknown";
+export type AccessPolicy = "public" | "customers_only" | "permission_required" | "unknown";
 
-type EntryMethod = "open" | "code" | "key" | "ask_staff" | "unknown";
+export type EntryMethod = "open" | "code" | "key" | "ask_staff" | "unknown";
 
-type VenueCategory = "cafe" | "restaurant" | "store" | "park" | "transit_station" | "other" | "unknown";
+export type VenueCategory = "cafe" | "restaurant" | "store" | "park" | "transit_station" | "other" | "unknown";
 
 export type BathroomAccessCode = {
     id: string;

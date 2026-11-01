@@ -41,20 +41,8 @@ export default function BathroomForm({
         }
     }, [state, onSaved]);
   return (
-    <Dialog
-      open={true}
-      onOpenChange={(open) => {
-        if (!open) onCancel();
-      }}
-    >
-      <DialogContent className="max-h-[90dvh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add bathroom</DialogTitle>
-          <DialogDescription>
-            Add details for the selected location.
-          </DialogDescription>
-        </DialogHeader>
-      
+   
+      <div>
         <p className="text-sm text-muted-foreground">
           Location: {location[0].toFixed(5)}, {location[1].toFixed(5)}
         </p>
@@ -149,7 +137,6 @@ export default function BathroomForm({
           <Button type="submit"  disabled={isPending || state.status === "success"}>{isPending ? "Saving…" : "Save bathroom"}</Button>
         </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+     </div>
   );
 }

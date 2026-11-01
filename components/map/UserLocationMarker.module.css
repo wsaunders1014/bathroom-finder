@@ -1,0 +1,21 @@
+/* The blue dot. The divIcon's own div is the dot, so there's no inner HTML. */
+.userDot {
+    background-color: rgb(72, 150, 227);
+    border: 2px solid white;
+    border-radius: 50%;
+    box-sizing: border-box;
+    animation: pulse 2s ease-out infinite;
+
+}
+
+/* A shadow with no blur grows outward while fading, like a ripple. */
+@keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgb(72 150 227 / 0.5); }
+    100% { box-shadow: 0 0 0 14px rgb(72 150 227 / 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .userDot {
+        animation: none;
+    }
+}

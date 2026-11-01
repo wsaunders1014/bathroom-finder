@@ -1,10 +1,9 @@
+"use client"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Button } from "./ui/button";
-type SignOutButtonProps = {
-    onSignedOut: () => void;
-};
-export default function SignOutButton({onSignedOut}:SignOutButtonProps){
+import { Button } from "../ui/button";
+
+export default function SignOutButton({}){
 
     const router = useRouter();
     async function signOut(){
@@ -14,10 +13,10 @@ export default function SignOutButton({onSignedOut}:SignOutButtonProps){
             console.error(error);
             return;
         }
-        onSignedOut();
+        
         router.refresh();
     }
     return(
-        <Button className={"absolute top-6 right-6 z-[1000]"} onClick={signOut}>Sign Out</Button>
+        <Button className={"motion-safe:hover:animate-shake-no"} onClick={signOut}>Sign Out</Button>
     )
 }
