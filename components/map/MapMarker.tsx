@@ -71,10 +71,11 @@ type MapMarkerProps = {
     accessPolicy: AccessPolicy;
     entryMethod: EntryMethod;
     children?: React.ReactNode;
+    onSelect: ()=> void;
 }
-export default function MapMarker({position, name, accessPolicy, entryMethod, children}:MapMarkerProps) {
+export default function MapMarker({position, name, accessPolicy, entryMethod, children, onSelect}:MapMarkerProps) {
     const title = `${name}, ${policyLabels[accessPolicy]}, ${entryLabels[entryMethod]}`;
-    return <Marker position={position} icon={getMarkerIcon(accessPolicy, entryMethod)} title={title}>
+    return <Marker position={position} icon={getMarkerIcon(accessPolicy, entryMethod)} title={title} eventHandlers={{click: onSelect}}>
         {children}
     </Marker>
 }

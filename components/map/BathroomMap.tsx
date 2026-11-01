@@ -13,9 +13,13 @@ import BathroomMarkers from "./BathroomMarkers";
 import MapLegend from "./MapLegend";
 import { useRouter } from "next/navigation";
 import LogInModal from "../auth/LogInModal";
+import SignInButton from "../auth/SignInButton";
+import SignOutButton from "../auth/SignOutButton";
 
 import MarkerScaler from "./MarkerScaler";
 import SidePanel from "../layout/SidePanel";
+import BathroomInfo from "./BathroomInfo";
+import CloseOnMapInteraction from "./CloseOnMapInteraction";
 type BathroomMapProps = {
     bathrooms: Bathroom[];
     isSignedIn: boolean;
@@ -39,7 +43,9 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
     const { position, status, retry } = useUserLocation();
     const [isAdding, setIsAdding] = useState(false);
     const [isFollowing, setIsFollowing] = useState(true);
-    const [logInModalOpen, setLogInModalOpen] = useState(false);
+    // Why the log in modal is open, so signing in from the Add button can go straight into add mode.
+    // null = closed.
+    const [logInReason, setLogInReason] = useState<"signIn" | "add" | null>(null);
 
     const [addedBathrooms, setAddedBathrooms] = useState<Bathroom[]>([]);
     const mapRef = useRef<LeafletMap | null>(null);
@@ -67,8 +73,8 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
 
 
     function handleSignIn() {
-        setLogInModalOpen(false);
-        setIsAdding(true);
+        if (logInReason === "add") setIsAdding(true);
+        setLogInReason(null);
         router.refresh();
     }
 
@@ -104,7 +110,7 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
 
     function toggleAddMode() {
         if (!isSignedIn) {
-            setLogInModalOpen(true);
+            setLogInReason("add");
             return;
         }
         if (isAddFlowActive) {
@@ -125,6 +131,13 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
         // The panel is opening now, so count its width even though `panel` hasn't updated yet.
         panToVisibleCenter(mapRef.current, location, asideRef.current?.offsetWidth ?? 0);
     }
+
+    function selectBathroom(bathroom: Bathroom){
+        setIsFollowing(false);
+        setPanel({type:"info", bathroom});
+         panToVisibleCenter(mapRef.current, [bathroom.location.latitude, bathroom.location.longitude], asideRef.current?.offsetWidth ?? 0);
+    }
+
     return (
         <div className={`relative isolate h-full w-full ${isAdding ? "bathroom-add-mode" : ""}`}>
             {isAdding && (
@@ -172,11 +185,16 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
                             }}
                         />
                     )}
+                    {/* Updater form so it reads the latest panel: in add mode, LocationPicker may have
+                        just switched the panel to "add" during this same click, and that should stay open. */}
+                    <CloseOnMapInteraction
+                        onClose={() => setPanel((current) => current?.type === "info" ? null : current)}
+                    />
                     <UserLocationMarker
                         position={position}
                         onUserPan={() => setIsFollowing(false)}
                     />
-                    <BathroomMarkers bathrooms={displayedBathrooms} />
+                    <BathroomMarkers bathrooms={displayedBathrooms} onSelect={selectBathroom} />
                 </MapContainer>
             </div>
             <SidePanel
@@ -184,14 +202,21 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
                 isOpen={panel !== null}
                 controls={
                     <>
-                        <MapLegend />
-                        <CenterLocationButton
-                            onClick={centerOnUser}
-                        />
-                        <AddBathroomButton
-                            isAdding={isAddFlowActive}
-                            onClick={toggleAddMode}
-                        />
+                        <div className="pointer-events-auto">
+                            {isSignedIn
+                                ? <SignOutButton />
+                                : <SignInButton onClick={() => setLogInReason("signIn")} />}
+                        </div>
+                        <div className="pointer-events-auto flex flex-col items-end gap-2">
+                            <MapLegend />
+                            <CenterLocationButton
+                                onClick={centerOnUser}
+                            />
+                            <AddBathroomButton
+                                isAdding={isAddFlowActive}
+                                onClick={toggleAddMode}
+                            />
+                        </div>
                     </>
                 }
             >
@@ -199,11 +224,13 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
                     onCancel={() => setPanel(null)}
                     onSaved={handleBathroomSaved} />
                 }
-                {/* {panel?.type === "info" && <BathroomInfo bathroom={panel.bathroom} />} */}
+                {panel?.type === "info" && <BathroomInfo bathroom={panel.bathroom}
+                    onClose={() => setPanel(null)} />
+                }
             </SidePanel>
 
-            {logInModalOpen && (
-                <LogInModal open={logInModalOpen} onOpenChange={() => setLogInModalOpen(false)} onSignedIn={handleSignIn} />
+            {logInReason !== null && (
+                <LogInModal open={logInReason !== null} onOpenChange={() => setLogInReason(null)} onSignedIn={handleSignIn} />
             )}
 
         </div>

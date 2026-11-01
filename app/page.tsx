@@ -4,7 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toBathroom } from "@/lib/bathrooms";
 import { connection } from "next/server";
-import TopBar from "@/components/layout/TopBar";
+import Brand from "@/components/layout/Brand";
 import { getIsSignedIn } from "@/lib/auth";
 async function BathroomMapWithData() {
   
@@ -37,8 +37,8 @@ export default async function Home() {
 
   return (
     <div className="grid h-dvh ">
-      <TopBar></TopBar>
       <main className="w-full relative">
+        <Brand />
         <Suspense fallback={<p>Loading bathrooms…</p>}>
           <BathroomMapWithData />
         </Suspense>
