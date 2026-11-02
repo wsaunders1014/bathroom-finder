@@ -1,45 +1,54 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { MapContainer, TileLayer, CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import UserLocationMarker from "./UserLocationMarker"
-import { Map as LeafletMap, point, type LatLngExpression } from "leaflet";
+import { Map as LeafletMap, type LatLngExpression } from "leaflet";
 import CenterLocationButton from "./CenterLocationButton";
 import AddBathroomButton from "./AddBathroomButton";
 import LocationPicker from "./LocationPicker";
 import BathroomForm from "../BathroomForm";
-import type { Bathroom } from "@/types/bathroom";
+import type { AccessPolicy, Bathroom, EntryMethod } from "@/types/bathroom";
 import BathroomMarkers from "./BathroomMarkers";
 import MapLegend from "./MapLegend";
 import { useRouter } from "next/navigation";
 import LogInModal from "../auth/LogInModal";
 import SignInButton from "../auth/SignInButton";
 import SignOutButton from "../auth/SignOutButton";
-
+import { Suspense } from "react";
 import MarkerScaler from "./MarkerScaler";
 import SidePanel from "../layout/SidePanel";
 import BathroomInfo from "./BathroomInfo";
 import CloseOnMapInteraction from "./CloseOnMapInteraction";
+import DraftMarker from "./DraftMarker";
+import MarkersLoading from "./MarkersLoading";
+import markerStyles from "./MapMarker.module.css";
 type BathroomMapProps = {
-    bathrooms: Bathroom[];
+    bathroomsPromise: Promise<Bathroom[]>;
     isSignedIn: boolean;
 }
 type Panel =
-    | { type: "add"; location: [number, number] }
+    // accessPolicy and entryMethod live here, not in the form, so the draft marker can show them too.
+    | { type: "add"; location: [number, number]; accessPolicy: AccessPolicy; entryMethod: EntryMethod }
     | { type: "info"; bathroom: Bathroom }
     | null;
 
+// How far to zoom in when a draft location is picked. Markers are full size from 18 up (see MarkerScaler).
+const DRAFT_ZOOM = 19;
+
 // Pans so latlng sits in the middle of the part of the map not covered by the side panel.
 // coveredRight is how many pixels the panel covers on the right (0 when it's closed).
-function panToVisibleCenter(map: LeafletMap | null, latlng: LatLngExpression, coveredRight: number) {
+// With minZoom, also zooms in to at least that level, but never zooms out.
+function panToVisibleCenter(map: LeafletMap | null, latlng: LatLngExpression, coveredRight: number, minZoom?: number) {
     if (!map) return;
-    const size = map.getSize();
-    const current = map.latLngToContainerPoint(latlng);
-    const target = point((size.x - coveredRight) / 2, size.y / 2);
-    map.panBy(current.subtract(target));
+    const zoom = Math.max(map.getZoom(), minZoom ?? 0);
+    // Work in pixels at the zoom we're going to: the map's center has to be half the panel's
+    // width to the right of latlng, so latlng ends up centered in the uncovered part.
+    const center = map.project(latlng, zoom).add([coveredRight / 2, 0]);
+    map.setView(map.unproject(center, zoom), zoom);
 }
 
-export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps) {
+export default function BathroomMap({ bathroomsPromise, isSignedIn }: BathroomMapProps) {
     const { position, status, retry } = useUserLocation();
     const [isAdding, setIsAdding] = useState(false);
     const [isFollowing, setIsFollowing] = useState(true);
@@ -87,12 +96,7 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
         setPanel(null);
         //router.refresh();
     }
-    const displayedBathrooms = [
-        ...bathrooms,
-        ...addedBathrooms.filter(
-            (added) => !bathrooms.some((item) => item.id === added.id),
-        ),
-    ];
+   
 
     function centerOnUser() {
         if (!position) {
@@ -127,34 +131,48 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
         setIsAdding(false);
         // Stop following, or the next GPS update would pan the map back to the user.
         setIsFollowing(false);
-        setPanel({ type: 'add', location })
+        setPanel({ type: 'add', location, accessPolicy: "unknown", entryMethod: "unknown" })
         // The panel is opening now, so count its width even though `panel` hasn't updated yet.
-        panToVisibleCenter(mapRef.current, location, asideRef.current?.offsetWidth ?? 0);
+        panToVisibleCenter(mapRef.current, location, asideRef.current?.offsetWidth ?? 0, DRAFT_ZOOM);
+    }
+
+    // Changes the draft's location or form choices without touching anything else in the panel.
+    function updateDraft(changes: { location?: [number, number]; accessPolicy?: AccessPolicy; entryMethod?: EntryMethod }) {
+        setPanel((current) => current?.type === "add" ? { ...current, ...changes } : current);
     }
 
     function selectBathroom(bathroom: Bathroom){
+        // The map stays interactive while the add form is open (so the draft can be dragged),
+        // so ignore other markers then, or clicking one would replace the form.
+        if (panel?.type === "add") return;
         setIsFollowing(false);
         setPanel({type:"info", bathroom});
          panToVisibleCenter(mapRef.current, [bathroom.location.latitude, bathroom.location.longitude], asideRef.current?.offsetWidth ?? 0);
     }
 
     return (
-        <div className={`relative isolate h-full w-full ${isAdding ? "bathroom-add-mode" : ""}`}>
-            {isAdding && (
+        <div className={`relative isolate h-full w-full ${isAdding ? "bathroom-add-mode" : ""} ${panel?.type === "add" ? markerStyles.dimOtherMarkers : ""}`}>
+            {isAddFlowActive && (
                 <div
-                    className="absolute top-4 left-1/2 z-[1000] flex -translate-x-1/2 items-center gap-3 rounded-lg bg-white px-4 py-3 text-black shadow-md"
+                    // Once the form is open, center in the map area left of the panel rather than the
+                    // whole map, or the panel covers it (220px is half the panel's w-110 = 440px), and sit
+                    // below the logo and Sign Out button, which that narrower area squeezes it between.
+                    className={`absolute z-[1000] flex -translate-x-1/2 items-center gap-3 rounded-lg bg-white px-4 py-3 text-black shadow-md ${isAdding ? "top-4 left-1/2" : "top-20 left-[calc(50%_-_220px)]"}`}
                 >
-                    <p role="status">Tap the map to place a bathroom</p>
+                    <p role="status">
+                        {isAdding ? "Tap the map to place a bathroom" : "Drag marker to adjust location or"}
+                    </p>
                     <button
                         type="button"
                         className="cursor-pointer underline"
-                        onClick={() => setIsAdding(false)}
+                        // Cancels whichever step we're in: placing the pin, or the form.
+                        onClick={() => isAdding ? setIsAdding(false) : setPanel(null)}
                     >
                         Cancel
                     </button>
                 </div>
             )}
-            <div inert={panel?.type === "add"} className="h-full w-full">
+            <div className="h-full w-full">
                 <MapContainer
                     center={[34.0211, -118.3965]}
                     zoom={18}
@@ -175,14 +193,11 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
                         onSelect={selectNewBathroomLocation}
                     />
                     {panel?.type === "add" && (
-                        <CircleMarker
-                            center={panel.location}
-                            radius={10}
-                            pathOptions={{
-                                color: "#15803d",
-                                fillColor: "#22c55e",
-                                fillOpacity: 0.8,
-                            }}
+                        <DraftMarker
+                            position={panel.location}
+                            accessPolicy={panel.accessPolicy}
+                            entryMethod={panel.entryMethod}
+                            onMove={(location) => updateDraft({ location })}
                         />
                     )}
                     {/* Updater form so it reads the latest panel: in add mode, LocationPicker may have
@@ -194,7 +209,9 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
                         position={position}
                         onUserPan={() => setIsFollowing(false)}
                     />
-                    <BathroomMarkers bathrooms={displayedBathrooms} onSelect={selectBathroom} />
+                    <Suspense fallback={<MarkersLoading />}>
+                        <BathroomMarkers bathroomsPromise={bathroomsPromise} addedBathrooms={addedBathrooms} onSelect={selectBathroom} />
+                    </Suspense>
                 </MapContainer>
             </div>
             <SidePanel
@@ -221,6 +238,10 @@ export default function BathroomMap({ bathrooms, isSignedIn }: BathroomMapProps)
                 }
             >
                 {panel?.type === "add" && <BathroomForm location={panel.location}
+                    accessPolicy={panel.accessPolicy}
+                    entryMethod={panel.entryMethod}
+                    onAccessPolicyChange={(accessPolicy) => updateDraft({ accessPolicy })}
+                    onEntryMethodChange={(entryMethod) => updateDraft({ entryMethod })}
                     onCancel={() => setPanel(null)}
                     onSaved={handleBathroomSaved} />
                 }

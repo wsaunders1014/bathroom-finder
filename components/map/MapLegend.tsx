@@ -35,7 +35,8 @@ export default function MapLegend() {
   }, [isOpen]);
 
   return (
-    <div ref={legendRef} className="group">
+    // relative, so the absolutely positioned legend sits just above the button.
+    <div ref={legendRef} className="group relative">
       {/* pb-2 (not a margin) keeps the gap above the button hoverable,
           so the legend stays open while the mouse moves up into it. */}
       <div
@@ -56,18 +57,13 @@ export default function MapLegend() {
           <h2 className="mt-4 font-heading font-bold text-(--brand-primary-blue)">How to get in</h2>
           <ul className="mt-2 space-y-1.5">
             {entryMethods.map((entryMethod) => {
-              const iconUrl = entryIconUrls[entryMethod];
               return (
                 <li key={entryMethod} className="flex items-center gap-2">
                   <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center text-(--brand-primary-blue)">
-                    {iconUrl ? (
-                      <span
-                        className={styles.icon}
-                        style={{ "--icon-url": `url('${iconUrl}')` } as React.CSSProperties}
-                      />
-                    ) : (
-                      <span className={styles.unknown}>?</span>
-                    )}
+                    <span
+                      className={styles.icon}
+                      style={{ "--icon-url": `url('${entryIconUrls[entryMethod]}')` } as React.CSSProperties}
+                    />
                   </span>
                   {capitalize(entryLabels[entryMethod])}
                 </li>

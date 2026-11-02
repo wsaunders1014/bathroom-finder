@@ -3,20 +3,17 @@ import { DivIcon } from "leaflet";
 import { Marker } from "react-leaflet";
 import styles from "./MapMarker.module.css";
 
-// The icon shows how to get in. Unknown has no file; it shows a "?" instead.
+// The icon shows how to get in.
 // Exported, along with the classes and labels below, so MapLegend stays in sync with the markers.
-export const entryIconUrls: Record<EntryMethod, string | null> = {
+export const entryIconUrls: Record<EntryMethod, string> = {
     open: '/icons/icon-lock.svg',
     code: "/icons/icon-code.svg",
     key: "/icons/icon-key.svg",
     ask_staff: '/icons/icon-ask.svg',
-    unknown: null,
+    unknown: "/icons/icon-unknown.svg",
 }
 const entryIconHtml = Object.fromEntries(
-    Object.entries(entryIconUrls).map(([entryMethod, url]) => [
-        entryMethod,
-        url ? maskIconHtml(url) : `<span class="${styles.unknown}">?</span>`,
-    ])
+    Object.entries(entryIconUrls).map(([entryMethod, url]) => [entryMethod, maskIconHtml(url)])
 ) as Record<EntryMethod,string>;
 // The fill color shows who's allowed to use it.
 export const policyClasses: Record<AccessPolicy,string> = {
@@ -44,20 +41,22 @@ export const entryLabels: Record<EntryMethod,string> = {
 // and reused after, so re-renders don't make Leaflet redraw the marker.
 const markerIcons = new Map<string, DivIcon>();
 
-function getMarkerIcon(accessPolicy: AccessPolicy, entryMethod: EntryMethod) {
-    const key = `${accessPolicy}:${entryMethod}`;
+// isDraft is for the unsaved marker shown while the add form is open (see DraftMarker).
+export function getMarkerIcon(accessPolicy: AccessPolicy, entryMethod: EntryMethod, isDraft = false) {
+    const key = `${accessPolicy}:${entryMethod}:${isDraft}`;
     let icon = markerIcons.get(key);
     if (!icon) {
-        icon = makeMarkerIcon(entryIconHtml[entryMethod], policyClasses[accessPolicy]);
+        const classes = isDraft ? `${policyClasses[accessPolicy]} ${styles.draft}` : policyClasses[accessPolicy];
+        icon = makeMarkerIcon(entryIconHtml[entryMethod], classes);
         markerIcons.set(key, icon);
     }
     return icon;
 }
-function makeMarkerIcon(innerHtml: string, policyClass: string) {
+function makeMarkerIcon(innerHtml: string, extraClasses: string) {
   return new DivIcon({
     className: styles.markerWrapper,
-    // aria-hidden so the "?" text doesn't replace the marker's title as its accessible name.
-    html: `<div class="${styles.marker} ${policyClass}" aria-hidden="true">${innerHtml}</div>`,
+    // aria-hidden so the icon is skipped and the marker's title stays its accessible name.
+    html: `<div class="${styles.marker} ${extraClasses}" aria-hidden="true">${innerHtml}</div>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
   });

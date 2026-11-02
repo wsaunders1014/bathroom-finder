@@ -13,7 +13,7 @@
     display: grid;
     place-items: center;
     scale: var(--marker-scale, 1);
-    transition: background-color 150ms, color 150ms, scale 200ms;
+    transition: background-color 150ms, color 150ms, scale 200ms, opacity 200ms;
     /* The fill color mixed with 10% black, so each policy gets a matching darker ring. */
     border: 2px solid color-mix(in oklch, var(--policy-color), black 10%);
 }
@@ -31,6 +31,27 @@
     color: var(--policy-color);
 }
 
+/* The unsaved marker while the add form is open. Until an access policy is picked it's an
+   empty dashed circle; picking one fills it like a normal marker. */
+.draft.policyUnknown {
+    background-color: rgb(255 255 255 / 0.85);
+    border: 2px dashed var(--unknown-fill);
+    color: var(--unknown-fill);
+}
+
+/* Once a policy is picked the draft looks like a normal marker, so a dashed ring
+   around it keeps it recognisable as the one being added. */
+.draft:not(.policyUnknown) {
+    outline: 2px dashed var(--policy-color);
+    outline-offset: 3px;
+}
+
+/* Put on the map's wrapper while the add form is open. Fades the saved markers
+   (they can't be clicked then anyway) so the draft stands out. */
+.dimOtherMarkers .marker:not(.draft) {
+    opacity: 0.4;
+}
+
 .icon {
     width: 20px;
     height: 20px;
@@ -39,10 +60,4 @@
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
-}
-
-.unknown {
-    font-weight: 700;
-    font-size: 18px;
-    line-height: 1;
 }

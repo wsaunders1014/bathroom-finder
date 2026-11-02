@@ -1,18 +1,27 @@
-import { Popup } from "react-leaflet";
+import { use } from "react";
 import type { Bathroom } from "@/types/bathroom";
 import MapMarker from "./MapMarker";
 type BathroomMarkersProps = {
-    bathrooms: Bathroom[];
+    bathroomsPromise: Promise<Bathroom[]>;
+    addedBathrooms: Bathroom[];
     onSelect: (bathroom:Bathroom)=> void;
 };
 
 export default function BathroomMarkers({
-    bathrooms,
+    bathroomsPromise,
+    addedBathrooms,
     onSelect
 }: BathroomMarkersProps) {
+    const bathrooms = use(bathroomsPromise);
+     const displayedBathrooms = [
+        ...bathrooms,
+        ...addedBathrooms.filter(
+            (added) => !bathrooms.some((item) => item.id === added.id),
+        ),
+    ];
  return (
     <>
-        {bathrooms.map((bathroom)=>(
+        {displayedBathrooms.map((bathroom)=>(
             <MapMarker 
                 key={bathroom.id} 
                 position={[bathroom.location.latitude, bathroom.location.longitude]} 

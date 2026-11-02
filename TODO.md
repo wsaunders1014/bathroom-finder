@@ -13,6 +13,6 @@
 - [x] Replace the centered form dialog with a desktop side panel, remove backdrop blur, and account for the panel when positioning the map.
 - [ ] Mobile bottom panel instead of the side panel on small screens (the side panel is 384px, wider than most phones).
 - [ ] Let the user click or drag the draft dot to fine-tune the location before saving. The map is currently `inert` while the form is open, which also blocks dragging the dot, so lock map panning differently (e.g. disable Leaflet's drag/zoom handlers) or keep the dot's area interactive.
-- [ ] Zoom in when panning to the draft dot (without zooming out if already closer), still centering it in the visible area beside the panel.
+- [x] Zoom in when panning to the draft dot (without zooming out if already closer), still centering it in the visible area beside the panel.
 - [ ] Style the bathroom form.
 - [ ] Move the Sign Out button out of the header and into the map controls (or otherwise keep it from overlapping the side panel).

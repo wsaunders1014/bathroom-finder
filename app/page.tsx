@@ -1,20 +1,15 @@
 import { Suspense } from "react";
 import BathroomMapLoader from "@/components/map/BathroomMapLoader";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toBathroom } from "@/lib/bathrooms";
-import { connection } from "next/server";
+
 import Brand from "@/components/layout/Brand";
+import MapSkeleton from "@/components/map/MapSkeleton";
 import { getIsSignedIn } from "@/lib/auth";
-async function BathroomMapWithData() {
-  
-  const isSignedIn = await getIsSignedIn();
-  const admin = createSupabaseAdminClient();
-
-
-  
-
-  const { data, error } = await admin
+async function getBathroomsFromDB() {
+  const client = await createSupabaseServerClient();
+  const { data, error } = await client
     .from("bathrooms")
     .select(`
   *,
@@ -30,8 +25,14 @@ async function BathroomMapWithData() {
     throw new Error("Could not load bathrooms");
   }
   const bathrooms = data.map(toBathroom);
+  return bathrooms;
+}
+async function BathroomMapWithData() {
 
-  return <BathroomMapLoader bathrooms={bathrooms} isSignedIn={isSignedIn} />;
+  const isSignedIn = await getIsSignedIn();
+  const bathroomsPromise = getBathroomsFromDB();
+
+  return <BathroomMapLoader bathroomsPromise={bathroomsPromise} isSignedIn={isSignedIn} />;
 }
 export default async function Home() {
 
@@ -39,7 +40,7 @@ export default async function Home() {
     <div className="grid h-dvh ">
       <main className="w-full relative">
         <Brand />
-        <Suspense fallback={<p>Loading bathrooms…</p>}>
+        <Suspense fallback={<MapSkeleton />}>
           <BathroomMapWithData />
         </Suspense>
       </main>

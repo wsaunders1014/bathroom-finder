@@ -1,0 +1,8 @@
+/* Same size and shape as the controls' Buttons */
+.control {
+    display: block;
+    width: 8rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+    background-color: color-mix(in oklch, var(--brand-primary-blue), transparent 85%);
+}

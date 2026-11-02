@@ -63,8 +63,8 @@ export default function GoogleSignInButton({ onSignedIn }: GoogleSignInButtonPro
       google.accounts.id.renderButton(buttonRef.current, {
         type: "standard",
         size: 'large',
-        width: 300,
         theme: "filled_black",
+        shape: "pill",
         click_listener: () => {
           activeButton = { onSignedIn, setIsLoading };
           setIsLoading(true);
@@ -78,9 +78,9 @@ export default function GoogleSignInButton({ onSignedIn }: GoogleSignInButtonPro
   return (
     <>
       <Script src="https://accounts.google.com/gsi/client" onReady={() => { void renderGoogleButton() }} />
-      {/* Reserves the 320x44 space Google's button iframe takes, so the dialog doesn't jump when it loads.
+      {/* Reserves the 44px height Google's button iframe takes, so the dialog doesn't jump when it loads.
           overflow-hidden clips the real iframe button while Google briefly shows it below its HTML placeholder copy. */}
-      <div className="h-11 w-80 overflow-hidden">
+      <div className="h-11 overflow-hidden">
         <div ref={buttonRef} className={isLoading ? "hidden":""}/>
         {isLoading && <p>Signing in...</p>}
       </div>

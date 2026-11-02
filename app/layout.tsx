@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono, Nunito } from "next/font/google";
-import "./globals.css";
+// Leaflet's CSS first, so our own rules in globals.css can override it.
 import "leaflet/dist/leaflet.css";
+import "./globals.css";
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],

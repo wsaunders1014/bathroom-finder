@@ -2,15 +2,16 @@
 
 import dynamic from "next/dynamic";
 import type { Bathroom } from "@/types/bathroom";
+import MapSkeleton from "./MapSkeleton";
 type BathroomMapLoaderProps = {
-  bathrooms: Bathroom[];
+  bathroomsPromise: Promise<Bathroom[]>;
   isSignedIn: boolean;
 }
 const BathroomMap = dynamic(() => import("./BathroomMap"), {
   ssr: false,
-  loading: () => <p>Loading map…</p>,
+  loading: () => <MapSkeleton />,
 });
 
-export default function BathroomMapLoader({bathrooms,isSignedIn}:BathroomMapLoaderProps) {
-  return <BathroomMap bathrooms={bathrooms} isSignedIn={isSignedIn}/>;
+export default function BathroomMapLoader({bathroomsPromise,isSignedIn}:BathroomMapLoaderProps) {
+  return <BathroomMap bathroomsPromise={bathroomsPromise} isSignedIn={isSignedIn}/>;
 }
